@@ -1,6 +1,7 @@
 import grpc from "@grpc/grpc-js";
 import protoLoader from "@grpc/proto-loader";
 import axios from "axios";
+import express from "express";
 import fs from "fs/promises";
 import path from "path";
 import { connectDB } from "./db/index.js";
@@ -9,6 +10,12 @@ import userService from "./services/user.service.js";
 
 const PROTO_DIR = path.resolve("./src/proto");
 const BASE_URL = "https://fiyoproto.vercel.app/fiyouser";
+const PORT = process.env.PORT || 8001;
+
+const app = express();
+
+app.get("/", (req, res) => res.send("fiyouser is online!"));
+app.listen(PORT, "0.0.0.0", () => console.log(`HTTP server running on port ${PORT}`));
 
 const loadProto = async (name) => {
   const filePath = path.join(PROTO_DIR, name);
@@ -28,7 +35,7 @@ const loadProto = async (name) => {
   );
 };
 
-const startServer = async () => {
+const startGRPCServer = async () => {
   const authProto = await loadProto("auth.proto");
   const userProto = await loadProto("user.proto");
 
@@ -36,16 +43,15 @@ const startServer = async () => {
   server.addService(authProto?.auth?.AuthService?.service, authService);
   server.addService(userProto?.user?.UserService?.service, userService);
 
-  const address = process.env.FIYOUSER_SERVICE_URL || "localhost:8001";
-  server.bindAsync(address, grpc.ServerCredentials.createInsecure(), () =>
-    console.log(`🚀 gRPC Server running at ${address}`)
+  server.bindAsync(`0.0.0.0:${PORT}`, grpc.ServerCredentials.createInsecure(), () =>
+    console.log(`🚀 gRPC Server running on port ${PORT}`)
   );
 };
 
 connectDB()
   .then(() =>
-    startServer().catch(
-      (err) => (console.error("Server error:", err), process.exit(1))
+    startGRPCServer().catch(
+      (err) => (console.error("gRPC Server error:", err), process.exit(1))
     )
   )
   .catch((err) => console.error("Database connection error:", err));
