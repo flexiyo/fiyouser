@@ -86,15 +86,15 @@ const startServer = async () => {
 
       console.log(`🚀 gRPC Server running on port ${boundPort}`);
     });
-
-    connectDB()
-      .then(startServer)
-      .catch((err) => {
-        console.error("❌ Database connection error:", err);
-        process.exit(1);
-      });
   } catch (error) {
     console.error("❌ Error starting server:", error);
     process.exit(1);
   }
 };
+
+connectDB()
+  .then(startServer)
+  .catch((err) => {
+    console.error("❌ Database connection error:", err);
+    process.exit(1);
+  });
