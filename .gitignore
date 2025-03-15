@@ -6,7 +6,6 @@ yarn-error.log*
 
 # DIRS
 src/proto
-certs
 
 # Environment variables
 .env
