@@ -100,25 +100,19 @@ const userService = {
   UpdateUser: async (call, callback) => {
     try {
       const { req_user_id, updated_fields } = call.request;
-      const parsedFields = JSON.parse(updated_fields);
 
-      const [updatedFields] = await sql`
+      await sql`
         UPDATE users SET ${sql({
-          ...parsedFields,
+          ...updated_fields,
           updated_at: new Date().toISOString(),
         })} 
-        WHERE id = ${req_user_id} RETURNING ${sql(Object.keys(parsedFields))};
+        WHERE id = ${req_user_id};
       `;
 
-      return callback(
-        null,
-        updatedFields
-          ? {
-              ...GrpcResponse.success("User updated."),
-              updated_fields: updatedFields,
-            }
-          : GrpcResponse.error("User not updated.")
-      );
+      return callback(null, {
+        ...GrpcResponse.success("User updated."),
+        updated_fields,
+      });
     } catch (error) {
       console.error("Error in UpdateUser:", error);
       return callback(null, GrpcResponse.error("Error in UpdateUser"));
